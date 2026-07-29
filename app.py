@@ -903,6 +903,6 @@ elif page == "Team Information":
 
     st.write(
         """
-        - Streamlit: [Điền link]
+        - Streamlit: https://hotel-recommendation-insights.streamlit.app/
         """
     )
