@@ -32,7 +32,7 @@ from src.recommenders import (
 
 
 st.set_page_config(
-    page_title="Hotel Recommendation System",
+    page_title="Hotel Recommendation & Customer Insights",
     page_icon="🏨",
     layout="wide",
 )
@@ -113,7 +113,7 @@ def display_recommendation_table(
 # ============================================================
 
 st.sidebar.title(
-    "Hotel Recommendation"
+    "Hotel Recommendation & Customer Insights"
 )
 
 page = st.sidebar.radio(
@@ -135,7 +135,7 @@ page = st.sidebar.radio(
 
 if page == "Business Problem":
     st.title(
-        "🏨 Hotel Recommendation System"
+        "🏨 Hotel Recommendation & Customer Insights"
     )
 
     st.subheader(
