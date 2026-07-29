@@ -1,0 +1,26 @@
+{
+  "hotel_info_rows": 740,
+  "hotel_comment_rows": 80314,
+  "content_based_hotels": 740,
+  "hotels_with_reviews": 341,
+  "cf_interactions": 5490,
+  "customer_groups": 147,
+  "cf_hotels": 251,
+  "sample_hotel_id": "1_24",
+  "sample_hotel_name": "Khu nghỉ dưỡng Alma Cam Ranh (Alma Resort Cam Ranh)",
+  "content_top10_overlap": 6,
+  "limitations": [
+    "Mỗi Reviewer ID chỉ có một interaction.",
+    "Collaborative recommendation ở cấp customer group, không phải từng cá nhân.",
+    "Một số Hotel ID không khớp giữa hai bảng.",
+    "Chưa có ground truth recommendation để tính Precision@K hoặc Recall@K."
+  ],
+  "versions": {
+    "pandas": "2.2.2",
+    "numpy": "2.0.2",
+    "scipy": "1.16.3",
+    "scikit_learn": "1.6.1",
+    "joblib": "1.5.3",
+    "pyarrow": "18.1.0"
+  }
+}
