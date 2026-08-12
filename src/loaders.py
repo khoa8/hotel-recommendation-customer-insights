@@ -90,6 +90,15 @@ def load_tfidf_matrix():
 
 
 @st.cache_resource
+def load_tfidf_vectorizer():
+    return joblib.load(
+        _require_file(
+            "tfidf_vectorizer.joblib"
+        )
+    )
+
+
+@st.cache_resource
 def load_ridge_model():
     return joblib.load(
         _require_file(

@@ -22,12 +22,14 @@ from src.loaders import (
     load_model_comparison,
     load_ridge_model,
     load_tfidf_matrix,
+    load_tfidf_vectorizer,
 )
 
 from src.recommenders import (
     recommend_by_cosine,
     recommend_by_gensim,
     recommend_with_ridge,
+    recommend_by_query,
 )
 
 
@@ -51,6 +53,7 @@ try:
     summary = load_deployment_summary()
     tfidf_matrix = load_tfidf_matrix()
     ridge_model = load_ridge_model()
+    tfidf_vectorizer = load_tfidf_vectorizer()
 
 except Exception as error:
     st.error(
@@ -209,34 +212,22 @@ Load artifacts → User input → Recommendation / Insight
 
 elif page == "Content-Based Recommendation":
     st.title(
-        "🔎 Content-Based Recommendation"
+        "🔎 Tìm khách sạn phù hợp"
     )
 
     st.write(
         """
-        Chọn một khách sạn để tìm các khách sạn
-        có nội dung mô tả, địa chỉ và hạng sao tương tự.
+        Tìm khách sạn theo nhu cầu của bạn
+        hoặc chọn một khách sạn có sẵn để
+        tìm những khách sạn tương tự.
         """
     )
 
-    content_options = create_hotel_options(
-        hotel_info
-    )
-
-    selected_label = st.selectbox(
-        "Chọn khách sạn",
-        list(content_options.keys()),
-    )
-
-    selected_hotel_id = content_options[
-        selected_label
-    ]
-
-    method = st.radio(
-        "Phương pháp",
+    search_mode = st.radio(
+        "Bạn muốn tìm theo cách nào?",
         [
-            "TF-IDF + Cosine Similarity",
-            "Gensim",
+            "Mô tả nhu cầu",
+            "Khách sạn tương tự",
         ],
         horizontal=True,
     )
@@ -246,45 +237,110 @@ elif page == "Content-Based Recommendation":
         min_value=5,
         max_value=20,
         value=10,
+        key="content_top_n",
     )
 
-    if st.button("Tạo recommendation"):
-        try:
-            if (
-                method
-                == "TF-IDF + Cosine Similarity"
-            ):
+    # --------------------------------------------------------
+    # Search by free-text query
+    # --------------------------------------------------------
+
+    if search_mode == "Mô tả nhu cầu":
+
+        query = st.text_input(
+            "Bạn đang tìm khách sạn như thế nào?",
+            placeholder=(
+                "Ví dụ: resort 5 sao gần biển "
+                "ở Cam Ranh"
+            ),
+        )
+
+        if st.button(
+            "🔍 Tìm khách sạn",
+            key="query_search_button",
+        ):
+            try:
+                result = recommend_by_query(
+                    query=query,
+                    hotel_info=hotel_info,
+                    tfidf_matrix=tfidf_matrix,
+                    tfidf_vectorizer=(
+                        tfidf_vectorizer
+                    ),
+                    top_n=top_n,
+                )
+
+                st.success(
+                    f"Tìm thấy {len(result)} "
+                    "khách sạn phù hợp."
+                )
+
+                display_recommendation_table(
+                    result
+                )
+
+                st.caption(
+                    "Kết quả được xếp hạng theo "
+                    "mức độ tương đồng giữa nội dung "
+                    "khách sạn và nhu cầu tìm kiếm."
+                )
+
+            except Exception as error:
+                st.error(str(error))
+
+    # --------------------------------------------------------
+    # Search hotels similar to an existing hotel
+    # --------------------------------------------------------
+
+    else:
+        content_options = (
+            create_hotel_options(
+                hotel_info
+            )
+        )
+
+        selected_label = st.selectbox(
+            "Chọn khách sạn",
+            list(
+                content_options.keys()
+            ),
+        )
+
+        selected_hotel_id = (
+            content_options[
+                selected_label
+            ]
+        )
+
+        if st.button(
+            "🔍 Tìm khách sạn tương tự",
+            key="similar_search_button",
+        ):
+            try:
                 result = recommend_by_cosine(
-                    hotel_id=selected_hotel_id,
+                    hotel_id=(
+                        selected_hotel_id
+                    ),
                     hotel_info=hotel_info,
                     tfidf_matrix=tfidf_matrix,
                     top_n=top_n,
                 )
-            else:
-                result = recommend_by_gensim(
-                    hotel_id=selected_hotel_id,
-                    hotel_info=hotel_info,
-                    gensim_top20=gensim_top20,
-                    top_n=top_n,
+
+                st.success(
+                    f"Tìm thấy {len(result)} "
+                    "khách sạn tương tự."
                 )
 
-            st.success(
-                f"Đã tạo Top {len(result)} "
-                "recommendation."
-            )
+                display_recommendation_table(
+                    result
+                )
 
-            display_recommendation_table(
-                result
-            )
+                st.caption(
+                    "Kết quả được xếp hạng theo "
+                    "mức độ tương đồng về nội dung."
+                )
 
-            st.caption(
-                "Similarity score đo mức giống nhau "
-                "về nội dung, không phải xác suất "
-                "người dùng sẽ đặt phòng."
-            )
-
-        except Exception as error:
-            st.exception(error)
+            except Exception as error:
+                st.error(str(error))
 
 
 # ============================================================

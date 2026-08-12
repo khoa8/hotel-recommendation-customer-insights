@@ -76,6 +76,85 @@ def recommend_by_cosine(
     return result
 
 
+def recommend_by_query(
+    query: str,
+    hotel_info: pd.DataFrame,
+    tfidf_matrix,
+    tfidf_vectorizer,
+    top_n: int = 10,
+) -> pd.DataFrame:
+    """Recommend hotels from a free-text query."""
+
+    query = query.strip()
+
+    if not query:
+        raise ValueError(
+            "Vui lòng nhập nhu cầu tìm khách sạn."
+        )
+
+    query_vector = (
+        tfidf_vectorizer.transform(
+            [query]
+        )
+    )
+
+    if query_vector.nnz == 0:
+        raise ValueError(
+            "Không tìm thấy từ khóa phù hợp "
+            "trong dữ liệu khách sạn. "
+            "Hãy thử mô tả khác."
+        )
+
+    scores = cosine_similarity(
+        query_vector,
+        tfidf_matrix,
+    ).ravel()
+
+    ranked_rows = (
+        np.argsort(scores)[::-1]
+    )
+
+    ranked_rows = [
+        int(row)
+        for row in ranked_rows
+        if scores[row] > 0
+    ][:top_n]
+
+    catalog_by_row = (
+        hotel_info.set_index(
+            "content_row",
+            drop=False,
+        )
+    )
+
+    result = (
+        catalog_by_row
+        .loc[
+            ranked_rows,
+            HOTEL_DISPLAY_COLUMNS,
+        ]
+        .copy()
+        .reset_index(drop=True)
+    )
+
+    result.insert(
+        2,
+        "similarity_score",
+        scores[ranked_rows],
+    )
+
+    result.insert(
+        0,
+        "rank",
+        range(
+            1,
+            len(result) + 1,
+        ),
+    )
+
+    return result
+
+
 def recommend_by_gensim(
     hotel_id: str,
     hotel_info: pd.DataFrame,
