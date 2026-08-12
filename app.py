@@ -16,7 +16,6 @@ from src.insights import (
 from src.loaders import (
     load_cf_data,
     load_deployment_summary,
-    load_gensim_top20,
     load_hotel_comments,
     load_hotel_info,
     load_model_comparison,
@@ -27,7 +26,6 @@ from src.loaders import (
 
 from src.recommenders import (
     recommend_by_cosine,
-    recommend_by_gensim,
     recommend_with_ridge,
     recommend_by_query,
 )
@@ -48,7 +46,6 @@ try:
     hotel_info = load_hotel_info()
     hotel_comments = load_hotel_comments()
     cf_data = load_cf_data()
-    gensim_top20 = load_gensim_top20()
     model_comparison = load_model_comparison()
     summary = load_deployment_summary()
     tfidf_matrix = load_tfidf_matrix()
