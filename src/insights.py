@@ -488,6 +488,37 @@ def build_keyword_tables(
     )
 
 
+def get_highest_reviews(
+    reviews: pd.DataFrame,
+    top_n: int = 10,
+) -> pd.DataFrame:
+    """Return highest-scoring unique reviews."""
+
+    columns = [
+        "score",
+        "nationality",
+        "group_name",
+        "title",
+        "body",
+    ]
+
+    return (
+        reviews
+        .sort_values(
+            "score",
+            ascending=False,
+        )
+        .drop_duplicates(
+            subset=[
+                "title",
+                "body",
+            ]
+        )
+        .head(top_n)[columns]
+        .reset_index(drop=True)
+    )
+
+
 def get_lowest_reviews(
     reviews: pd.DataFrame,
     top_n: int = 10,

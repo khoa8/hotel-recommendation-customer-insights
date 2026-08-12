@@ -30,6 +30,10 @@ from src.recommenders import (
     recommend_by_query,
 )
 
+from src.ui_components import (
+    display_hotel_cards,
+)
+
 
 st.set_page_config(
     page_title="Hotel Recommendation & Customer Insights",
@@ -80,32 +84,6 @@ def create_hotel_options(
         ): row.hotel_id
         for row in catalog.itertuples()
     }
-
-
-def display_recommendation_table(
-    recommendations: pd.DataFrame,
-):
-    display_data = recommendations.copy()
-
-    if "similarity_score" in display_data:
-        display_data[
-            "similarity_score"
-        ] = display_data[
-            "similarity_score"
-        ].round(4)
-
-    if "prediction" in display_data:
-        display_data[
-            "prediction"
-        ] = display_data[
-            "prediction"
-        ].round(3)
-
-    st.dataframe(
-        display_data,
-        use_container_width=True,
-        hide_index=True,
-    )
 
 
 # ============================================================
@@ -271,14 +249,22 @@ elif page == "Content-Based Recommendation":
                     "khách sạn phù hợp."
                 )
 
-                display_recommendation_table(
-                    result
+                st.caption(
+                    "Mức phù hợp được tính từ "
+                    "Cosine Similarity × 100. "
+                    "Đây là độ tương đồng nội dung, "
+                    "không phải xác suất người dùng "
+                    "sẽ đặt phòng."
                 )
 
-                st.caption(
-                    "Kết quả được xếp hạng theo "
-                    "mức độ tương đồng giữa nội dung "
-                    "khách sạn và nhu cầu tìm kiếm."
+                display_hotel_cards(
+                    recommendations=result,
+                    hotel_info=hotel_info,
+                    hotel_comments=hotel_comments,
+                    mode="content",
+                    score_label=(
+                        "Mức phù hợp với nhu cầu"
+                    ),
                 )
 
             except Exception as error:
@@ -327,13 +313,19 @@ elif page == "Content-Based Recommendation":
                     "khách sạn tương tự."
                 )
 
-                display_recommendation_table(
-                    result
+                st.caption(
+                    "Mức tương đồng được tính từ "
+                    "Cosine Similarity × 100. "
+                    "Đây là độ giống nhau về nội dung "
+                    "giữa hai khách sạn."
                 )
 
-                st.caption(
-                    "Kết quả được xếp hạng theo "
-                    "mức độ tương đồng về nội dung."
+                display_hotel_cards(
+                    recommendations=result,
+                    hotel_info=hotel_info,
+                    hotel_comments=hotel_comments,
+                    mode="content",
+                    score_label="Mức tương đồng",
                 )
 
             except Exception as error:
@@ -442,17 +434,23 @@ elif page == "Customer-Group Recommendation":
             )
 
             st.success(
-                f"Recommendation cho: "
+                f"Tìm thấy {len(result)} "
+                "khách sạn phù hợp với nhóm: "
                 f"{customer_group}"
             )
 
-            display_recommendation_table(
-                result
+            st.caption(
+                "Điểm dự đoán là rating mà mô hình "
+                "ước lượng cho từng khách sạn đối với "
+                "nhóm khách đã chọn, trên thang 0–10."
             )
 
-            st.caption(
-                "Prediction là điểm rating dự đoán "
-                "cho customer group và khách sạn."
+            display_hotel_cards(
+                recommendations=result,
+                hotel_info=hotel_info,
+                hotel_comments=hotel_comments,
+                mode="customer_group",
+                customer_group=customer_group,
             )
 
         except Exception as error:
