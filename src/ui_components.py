@@ -9,6 +9,10 @@ from src.insights import (
     get_lowest_reviews,
 )
 
+from src.ui_helpers import (
+    extract_hotel_highlights,
+)
+
 
 def _format_score(
     value,
@@ -152,7 +156,6 @@ def display_hotel_cards(
     hotel_comments: pd.DataFrame,
     mode: str,
     score_label: str | None = None,
-    customer_group: str | None = None,
 ):
     """Display recommendation results as hotel cards."""
 
@@ -319,6 +322,45 @@ def display_hotel_cards(
                         unsafe_allow_html=True,
                     )
 
+                highlights = (
+                    extract_hotel_highlights(
+                        hotel_name=hotel_name,
+                        hotel_description=(
+                            hotel.get(
+                                "hotel_description"
+                            )
+                        ),
+                        hotel_address=(
+                            hotel.get(
+                                "hotel_address"
+                            )
+                        ),
+                        max_tags=5,
+                    )
+                )
+
+                if highlights:
+                    highlight_html = "".join(
+                        (
+                            '<span class="'
+                            'hotel-highlight-tag">'
+                            f'{highlight}'
+                            '</span>'
+                        )
+                        for highlight
+                        in highlights
+                    )
+
+                    st.markdown(
+                        (
+                            '<div class="'
+                            'hotel-highlight-row">'
+                            f'{highlight_html}'
+                            '</div>'
+                        ),
+                        unsafe_allow_html=True,
+                    )
+
                 address = hotel.get(
                     "hotel_address"
                 )
@@ -418,37 +460,32 @@ def display_hotel_cards(
                             prediction
                         )
 
-                        st.metric(
-                            "Điểm dự đoán",
-                            (
-                                f"{prediction:.2f}"
-                                "/10"
+                        prediction_percent = (
+                            prediction * 10
+                        )
+
+                        prediction_percent = max(
+                            0.0,
+                            min(
+                                100.0,
+                                prediction_percent,
                             ),
                         )
 
-                        progress_value = int(
-                            round(
-                                prediction * 10
-                            )
-                        )
-
-                        progress_value = max(
-                            0,
-                            min(
-                                100,
-                                progress_value,
+                        st.metric(
+                            "Điểm dự đoán",
+                            (
+                                f"{prediction_percent:.0f}%"
                             ),
                         )
 
                         st.progress(
-                            progress_value
-                        )
-
-                        if customer_group:
-                            st.caption(
-                                "Cho nhóm:\n"
-                                f"{customer_group}"
+                            int(
+                                round(
+                                    prediction_percent
+                                )
                             )
+                        )
 
             # ================================================
             # Details and reviews
