@@ -34,6 +34,11 @@ from src.ui_components import (
     display_hotel_cards,
 )
 
+from src.ui_theme import (
+    display_global_banner,
+    load_app_styles,
+)
+
 
 st.set_page_config(
     page_title="Hotel Recommendation & Customer Insights",
@@ -41,6 +46,7 @@ st.set_page_config(
     layout="wide",
 )
 
+load_app_styles()
 
 # ============================================================
 # Load data and models
@@ -86,25 +92,57 @@ def create_hotel_options(
     }
 
 
+PAGE_LABELS = {
+    "Business Problem": (
+        "🏠 Trang chủ"
+    ),
+    "Content-Based Recommendation": (
+        "🔎 Tìm khách sạn"
+    ),
+    "Customer-Group Recommendation": (
+        "👥 Gợi ý theo nhóm khách"
+    ),
+    "Hotel Insights": (
+        "⭐ Khám phá & đánh giá"
+    ),
+    "Evaluation & Report": (
+        "📊 Báo cáo mô hình"
+    ),
+    "Team Information": (
+        "ℹ️ Về dự án"
+    ),
+}
+
+
 # ============================================================
 # Sidebar
 # ============================================================
 
-st.sidebar.title(
-    "Hotel Recommendation & Customer Insights"
+st.sidebar.markdown(
+    """
+    ## 🏨 Hotel Explorer
+
+    *Tìm nơi ở phù hợp với bạn*
+    """
 )
 
 page = st.sidebar.radio(
-    "Menu",
-    [
-        "Business Problem",
-        "Content-Based Recommendation",
-        "Customer-Group Recommendation",
-        "Hotel Insights",
-        "Evaluation & Report",
-        "Team Information",
-    ],
+    "Khám phá",
+    list(
+        PAGE_LABELS.keys()
+    ),
+    format_func=(
+        lambda value:
+        PAGE_LABELS[value]
+    ),
 )
+
+
+# ============================================================
+# Global banner
+# ============================================================
+
+display_global_banner()
 
 
 # ============================================================
@@ -112,12 +150,16 @@ page = st.sidebar.radio(
 # ============================================================
 
 if page == "Business Problem":
-    st.title(
-        "🏨 Hotel Recommendation & Customer Insights"
+    st.header(
+        "Hotel Explorer"
     )
 
-    st.subheader(
-        "Business Problem"
+    st.write(
+        """
+        Tìm khách sạn phù hợp với nhu cầu,
+        khám phá gợi ý theo nhóm khách
+        và xem insight từ đánh giá thực tế.
+        """
     )
 
     st.write(
