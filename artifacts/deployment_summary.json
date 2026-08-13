@@ -8,7 +8,7 @@
   "cf_hotels": 251,
   "sample_hotel_id": "1_24",
   "sample_hotel_name": "Khu nghỉ dưỡng Alma Cam Ranh (Alma Resort Cam Ranh)",
-  "content_top10_overlap": 6,
+  "content_top10_overlap": 5,
   "limitations": [
     "Mỗi Reviewer ID chỉ có một interaction.",
     "Collaborative recommendation ở cấp customer group, không phải từng cá nhân.",

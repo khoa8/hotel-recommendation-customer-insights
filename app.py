@@ -250,11 +250,13 @@ elif page == "Content-Based Recommendation":
                 )
 
                 st.caption(
-                    "Mức phù hợp được tính từ "
-                    "Cosine Similarity × 100. "
-                    "Đây là độ tương đồng nội dung, "
-                    "không phải xác suất người dùng "
-                    "sẽ đặt phòng."
+                    "Nếu mô tả có loại hình, hạng sao "
+                    "hoặc khu vực được nhận diện, hệ thống "
+                    "sẽ dùng các điều kiện đó để lọc ứng viên, "
+                    "sau đó xếp hạng bằng TF-IDF + "
+                    "Cosine Similarity. Phần trăm hiển thị "
+                    "là độ tương đồng nội dung, không phải "
+                    "xác suất người dùng sẽ đặt phòng."
                 )
 
                 display_hotel_cards(
