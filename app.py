@@ -307,7 +307,7 @@ elif page == "Content-Based Recommendation":
                     hotel_comments=hotel_comments,
                     mode="content",
                     score_label=(
-                        "Mức phù hợp với nhu cầu"
+                        "Mức phù hợp"
                     ),
                 )
 
@@ -486,7 +486,8 @@ elif page == "Customer-Group Recommendation":
             st.caption(
                 "Điểm dự đoán là rating mà mô hình "
                 "ước lượng cho từng khách sạn đối với "
-                "nhóm khách đã chọn, trên thang 0–10."
+                "nhóm khách đã chọn. "
+                "Đây không phải xác suất đặt phòng."
             )
 
             display_hotel_cards(
@@ -494,7 +495,6 @@ elif page == "Customer-Group Recommendation":
                 hotel_info=hotel_info,
                 hotel_comments=hotel_comments,
                 mode="customer_group",
-                customer_group=customer_group,
             )
 
         except Exception as error:

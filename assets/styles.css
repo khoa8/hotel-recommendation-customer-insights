@@ -331,15 +331,88 @@ section[data-testid="stSidebar"] h1 {
 
 
 /* ============================================================
+   Hotel highlight tags
+   ============================================================ */
+
+.hotel-highlight-row {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 0.45rem;
+
+    margin:
+        0 0
+        0.9rem;
+}
+
+
+.hotel-highlight-tag {
+    display: inline-flex;
+    align-items: center;
+
+    padding:
+        0.34rem
+        0.65rem;
+
+    border-radius: 999px;
+
+    border:
+        1px solid
+        #cfe4fb;
+
+    background:
+        #eef7ff;
+
+    color:
+        #245a8d;
+
+    font-size: 0.84rem;
+    font-weight: 700;
+
+    line-height: 1.2;
+}
+
+
+/* ============================================================
    Recommendation score box
    ============================================================ */
 
+/*
+Score box luôn là hình vuông 160.
+*/
+
 [class*="st-key-score-box-"] {
+    box-sizing: border-box;
+
+    width:
+        160px
+        !important;
+
+    min-width:
+        160px
+        !important;
+
+    max-width:
+        160px
+        !important;
+
+    height:
+        160px
+        !important;
+
+    min-height:
+        160px
+        !important;
+
+    max-height:
+        160px
+        !important;
+
     padding:
-        0.85rem
         1rem;
 
-    border-radius: 15px;
+    border-radius:
+        15px;
 
     border:
         1px solid
@@ -351,6 +424,9 @@ section[data-testid="stSidebar"] h1 {
             #edf6ff 0%,
             #f8fbff 100%
         );
+
+    overflow:
+        hidden;
 }
 
 [class*="st-key-score-box-"]
