@@ -192,8 +192,31 @@ def display_hotel_cards(
             ].eq(hotel_id)
         ].copy()
 
+        rank = getattr(
+            recommendation,
+            "rank",
+            None,
+        )
+
+        safe_hotel_id = (
+            str(hotel_id)
+            .replace("_", "-")
+        )
+
+        if rank == 1:
+            card_key = (
+                f"hotel-card-top-"
+                f"{safe_hotel_id}"
+            )
+        else:
+            card_key = (
+                f"hotel-card-"
+                f"{safe_hotel_id}"
+            )
+        
         with st.container(
-            border=True
+            border=False,
+            key=card_key,
         ):
             main_col, score_col = (
                 st.columns(
@@ -206,12 +229,6 @@ def display_hotel_cards(
             # ================================================
 
             with main_col:
-
-                rank = getattr(
-                    recommendation,
-                    "rank",
-                    None,
-                )
 
                 hotel_name = str(
                     hotel[
@@ -229,52 +246,77 @@ def display_hotel_cards(
                         f"### {hotel_name}"
                     )
 
-                summary_parts = []
+                metadata_badges = []
 
                 hotel_rank = hotel.get(
                     "hotel_rank"
                 )
 
-                if pd.notna(
-                    hotel_rank
-                ):
-                    summary_parts.append(
-                        "⭐ Hạng sao: "
-                        f"{float(hotel_rank):g}"
+                if pd.notna(hotel_rank):
+                    metadata_badges.append(
+                        (
+                            "star",
+                            "⭐",
+                            (
+                                f"{float(hotel_rank):g} sao"
+                            ),
+                        )
                     )
 
                 total_score = hotel.get(
                     "total_score"
                 )
 
-                if pd.notna(
-                    total_score
-                ):
-                    summary_parts.append(
-                        "🏅 Điểm: "
-                        f"{float(total_score):.1f}/10"
+                if pd.notna(total_score):
+                    metadata_badges.append(
+                        (
+                            "score",
+                            "🏅",
+                            (
+                                f"{float(total_score):.1f}/10"
+                            ),
+                        )
                     )
 
-                comments_count = (
-                    hotel.get(
-                        "comments_count"
-                    )
+                comments_count = hotel.get(
+                    "comments_count"
                 )
 
-                if pd.notna(
-                    comments_count
-                ):
-                    summary_parts.append(
-                        "💬 "
-                        f"{int(comments_count):,} "
-                        "reviews"
+                if pd.notna(comments_count):
+                    metadata_badges.append(
+                        (
+                            "reviews",
+                            "💬",
+                            (
+                                f"{int(comments_count):,} "
+                                "reviews"
+                            ),
+                        )
                     )
 
-                if summary_parts:
-                    st.write(
-                        "   ·   ".join(
-                            summary_parts
-                        )
+                badge_html = "".join(
+                    (
+                        '<span class="hotel-meta-badge '
+                        f'{css_class}">'
+                        f'{icon} {text}'
+                        '</span>'
+                    )
+                    for (
+                        css_class,
+                        icon,
+                        text,
+                    )
+                    in metadata_badges
+                )
+
+                if badge_html:
+                    st.markdown(
+                        (
+                            '<div class="hotel-meta-row">'
+                            f'{badge_html}'
+                            '</div>'
+                        ),
+                        unsafe_allow_html=True,
                     )
 
                 address = hotel.get(
@@ -312,92 +354,101 @@ def display_hotel_cards(
 
             with score_col:
 
-                if mode == "content":
+                score_box_key = (
+                    f"score-box-{safe_hotel_id}"
+                )
 
-                    similarity = getattr(
-                        recommendation,
-                        "similarity_score",
-                        0,
-                    )
-
-                    similarity = float(
-                        similarity
-                    )
-
-                    fit_percent = (
-                        similarity * 100
-                    )
-
-                    fit_percent = max(
-                        0.0,
-                        min(
-                            100.0,
-                            fit_percent,
-                        ),
-                    )
-
-                    st.metric(
-                        (
-                            score_label
-                            or "Mức phù hợp"
-                        ),
-                        f"{fit_percent:.0f}%",
-                    )
-
-                    st.progress(
-                        int(
-                            round(
-                                fit_percent
-                            )
-                        )
-                    )
-
-                elif (
-                    mode
-                    == "customer_group"
+                with st.container(
+                    border=False,
+                    key=score_box_key,
                 ):
 
-                    prediction = getattr(
-                        recommendation,
-                        "prediction",
-                        0,
-                    )
+                    if mode == "content":
 
-                    prediction = float(
-                        prediction
-                    )
-
-                    st.metric(
-                        "Điểm dự đoán",
-                        (
-                            f"{prediction:.2f}"
-                            "/10"
-                        ),
-                    )
-
-                    progress_value = int(
-                        round(
-                            prediction * 10
+                        similarity = getattr(
+                            recommendation,
+                            "similarity_score",
+                            0,
                         )
-                    )
 
-                    progress_value = max(
-                        0,
-                        min(
-                            100,
-                            progress_value,
-                        ),
-                    )
-
-                    st.progress(
-                        progress_value
-                    )
-
-                    if customer_group:
-                        st.caption(
-                            "Cho nhóm:\n"
-                            f"{customer_group}"
+                        similarity = float(
+                            similarity
                         )
+
+                        fit_percent = (
+                            similarity * 100
+                        )
+
+                        fit_percent = max(
+                            0.0,
+                            min(
+                                100.0,
+                                fit_percent,
+                            ),
+                        )
+
+                        st.metric(
+                            (
+                                score_label
+                                or "Mức phù hợp"
+                            ),
+                            f"{fit_percent:.0f}%",
+                        )
+
+                        st.progress(
+                            int(
+                                round(
+                                    fit_percent
+                                )
+                            )
+                        )
+
+                    elif (
+                        mode
+                        == "customer_group"
+                    ):
+
+                        prediction = getattr(
+                            recommendation,
+                            "prediction",
+                            0,
+                        )
+
+                        prediction = float(
+                            prediction
+                        )
+
+                        st.metric(
+                            "Điểm dự đoán",
+                            (
+                                f"{prediction:.2f}"
+                                "/10"
+                            ),
+                        )
+
+                        progress_value = int(
+                            round(
+                                prediction * 10
+                            )
+                        )
+
+                        progress_value = max(
+                            0,
+                            min(
+                                100,
+                                progress_value,
+                            ),
+                        )
+
+                        st.progress(
+                            progress_value
+                        )
+
+                        if customer_group:
+                            st.caption(
+                                "Cho nhóm:\n"
+                                f"{customer_group}"
+                            )
 
             # ================================================
             # Details and reviews
