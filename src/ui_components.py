@@ -17,6 +17,9 @@ from src.image_helpers import (
     get_hotel_image,
 )
 
+from src.i18n import (
+    t,
+)
 
 def _format_score(
     value,
@@ -53,13 +56,16 @@ def _build_maps_url(
 
 def _display_review_list(
     reviews: pd.DataFrame,
+    language: str,
 ):
     """Display reviews as user-friendly cards."""
 
     if reviews.empty:
         st.info(
-            "Không có review phù hợp "
-            "trong dữ liệu."
+            t(
+                "card.no_matching_reviews",
+                language,
+            )
         )
         return
 
@@ -127,6 +133,7 @@ def _display_review_list(
 
 def _display_rating_details(
     hotel: pd.Series,
+    language: str,
 ):
     """Display detailed hotel rating criteria."""
 
@@ -134,10 +141,14 @@ def _display_rating_details(
 
     for index, (
         column,
-        label,
+        _,
     ) in enumerate(
         CRITERIA.items()
     ):
+        label = t(
+            f"criteria.{column}",
+            language,
+        )
         value = hotel.get(
             column
         )
@@ -159,7 +170,8 @@ def display_hotel_cards(
     hotel_info: pd.DataFrame,
     hotel_comments: pd.DataFrame,
     mode: str,
-    score_label: str | None = None,
+    language: str,
+    score_label_key: str | None = None,
 ):
     """Display recommendation results as hotel cards."""
 
@@ -266,7 +278,12 @@ def display_hotel_cards(
                         )
 
                         if not is_exact_image:
-                            st.caption("Ảnh minh họa")
+                                st.caption(
+                                    t(
+                                        "card.image_caption",
+                                        language,
+                                    )
+                                )
 
             with main_col:
 
@@ -302,7 +319,13 @@ def display_hotel_cards(
                                 "star",
                                 "⭐",
                                 (
-                                    f"{float(hotel_rank):g} sao"
+                                    t(
+                                        "card.stars",
+                                        language,
+                                        value=(
+                                            f"{float(hotel_rank):g}"
+                                        ),
+                                    )
                                 ),
                             )
                         )
@@ -331,9 +354,12 @@ def display_hotel_cards(
                             (
                                 "reviews",
                                 "💬",
-                                (
-                                    f"{int(comments_count):,} "
-                                    "reviews"
+                                t(
+                                    "card.review_count",
+                                    language,
+                                    count=(
+                                        f"{int(comments_count):,}"
+                                    ),
                                 ),
                             )
                         )
@@ -385,7 +411,7 @@ def display_hotel_cards(
                             (
                                 '<span class="'
                                 'hotel-highlight-tag">'
-                                f'{highlight}'
+                                f'{t(highlight, language)}'
                                 '</span>'
                             )
                             for highlight
@@ -428,7 +454,10 @@ def display_hotel_cards(
 
                     else:
                         st.caption(
-                            "📍 Chưa có dữ liệu địa chỉ."
+                            t(
+                                "card.no_address",
+                                language,
+                            )
                         )
 
             # ================================================
@@ -471,9 +500,12 @@ def display_hotel_cards(
                         )
 
                         st.metric(
-                            (
-                                score_label
-                                or "Mức phù hợp"
+                            t(
+                                (
+                                    score_label_key
+                                    or "card.match_score"
+                                ),
+                                language,
                             ),
                             f"{fit_percent:.0f}%",
                         )
@@ -514,7 +546,10 @@ def display_hotel_cards(
                         )
 
                         st.metric(
-                            "Điểm dự đoán",
+                            t(
+                                "card.predicted_score",
+                                language,
+                            ),
                             (
                                 f"{prediction_percent:.0f}%"
                             ),
@@ -533,18 +568,30 @@ def display_hotel_cards(
             # ================================================
 
             with st.expander(
-                "Chi tiết và Đánh giá"
+                    t(
+                        "card.details",
+                        language,
+                    )
             ):
                 st.markdown(
-                    "#### Điểm đánh giá chi tiết"
+                    "#### "
+                    + t(
+                        "card.rating_details",
+                        language,
+                    )
                 )
 
                 _display_rating_details(
-                    hotel
+                    hotel,
+                    language,
                 )
 
                 st.markdown(
-                    "#### Mô tả khách sạn"
+                    "#### "
+                    + t(
+                        "card.description",
+                        language,
+                    )
                 )
 
                 description = hotel.get(
@@ -564,23 +611,34 @@ def display_hotel_cards(
                     )
                 else:
                     st.info(
-                        "Khách sạn chưa có "
-                        "mô tả chi tiết."
+                        t(
+                            "card.no_description",
+                            language,
+                        )
                     )
 
                 st.markdown(
-                    "#### Đánh giá của khách hàng"
+                    "#### "
+                    + t(
+                        "card.customer_reviews",
+                        language,
+                    )
                 )
 
                 st.caption(
-                    "Số review có trong dataset: "
-                    f"{len(reviews):,}"
+                    t(
+                        "card.dataset_reviews",
+                        language,
+                        count=f"{len(reviews):,}",
+                    )
                 )
 
                 if reviews.empty:
                     st.info(
-                        "Khách sạn này chưa có "
-                        "review trong dataset."
+                        t(
+                            "card.no_reviews",
+                            language,
+                        )
                     )
 
                 else:
@@ -598,27 +656,27 @@ def display_hotel_cards(
                         )
                     )
 
-                    high_tab, low_tab = (
-                        st.tabs(
-                            [
-                                (
-                                    "👍 5 review "
-                                    "cao điểm nhất"
-                                ),
-                                (
-                                    "👎 5 review "
-                                    "thấp điểm nhất"
-                                ),
-                            ]
-                        )
+                    high_tab, low_tab = st.tabs(
+                        [
+                            t(
+                                "card.high_reviews",
+                                language,
+                            ),
+                            t(
+                                "card.low_reviews",
+                                language,
+                            ),
+                        ]
                     )
 
                     with high_tab:
                         _display_review_list(
-                            highest_reviews
+                            highest_reviews,
+                            language,
                         )
 
                     with low_tab:
                         _display_review_list(
-                            lowest_reviews
+                            lowest_reviews,
+                            language,
                         )

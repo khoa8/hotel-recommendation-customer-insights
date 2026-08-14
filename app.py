@@ -25,6 +25,7 @@ from src.loaders import (
 )
 
 from src.recommenders import (
+    RecommendationError,
     recommend_by_cosine,
     recommend_with_ridge,
     recommend_by_query,
@@ -39,6 +40,12 @@ from src.ui_theme import (
     load_app_styles,
 )
 
+from src.i18n import (
+    LANGUAGE_OPTIONS,
+    localize_dataframe,
+    localize_value,
+    t,
+)
 
 st.set_page_config(
     page_title="Hotel Recommendation & Customer Insights",
@@ -64,7 +71,7 @@ try:
 
 except Exception as error:
     st.error(
-        "Không thể load dữ liệu hoặc model."
+        "Error in loading data/models."
     )
     st.exception(error)
     st.stop()
@@ -92,24 +99,21 @@ def create_hotel_options(
     }
 
 
-PAGE_LABELS = {
+PAGE_LABEL_KEYS = {
     "Business Problem": (
-        "🏠 Trang chủ"
+        "nav.home"
     ),
     "Content-Based Recommendation": (
-        "🔎 Tìm khách sạn"
+        "nav.search"
     ),
     "Customer-Group Recommendation": (
-        "👥 Gợi ý theo nhóm khách"
+        "nav.group"
     ),
     "Hotel Insights": (
-        "⭐ Khám phá & đánh giá"
+        "nav.insights"
     ),
     "Evaluation & Report": (
-        "📊 Báo cáo mô hình"
-    ),
-    "Team Information": (
-        "ℹ️ Về dự án"
+        "nav.evaluation"
     ),
 }
 
@@ -119,21 +123,48 @@ PAGE_LABELS = {
 # ============================================================
 
 st.sidebar.markdown(
-    """
-    ## 🏨 Hotel Explorer
+    "## 🏨 Hotel Explorer"
+)
 
-    *Tìm nơi ở phù hợp với bạn*
-    """
+language = st.sidebar.radio(
+    "Language/Ngôn ngữ",
+    list(
+        LANGUAGE_OPTIONS.keys()
+    ),
+    index=0,
+    format_func=(
+        lambda code:
+        LANGUAGE_OPTIONS[
+            code
+        ]
+    ),
+    horizontal=True,
+    key="language_code",
+)
+
+st.sidebar.caption(
+    t(
+        "sidebar.tagline",
+        language,
+    )
 )
 
 page = st.sidebar.radio(
-    "Khám phá",
+    t(
+        "sidebar.explore",
+        language,
+    ),
     list(
-        PAGE_LABELS.keys()
+        PAGE_LABEL_KEYS.keys()
     ),
     format_func=(
         lambda value:
-        PAGE_LABELS[value]
+        t(
+            PAGE_LABEL_KEYS[
+                value
+            ],
+            language,
+        )
     ),
 )
 
@@ -142,7 +173,7 @@ page = st.sidebar.radio(
 # Global banner
 # ============================================================
 
-display_global_banner()
+display_global_banner(language)
 
 
 # ============================================================
@@ -151,75 +182,89 @@ display_global_banner()
 
 if page == "Business Problem":
     st.header(
-        "Hotel Explorer"
+        t(
+            "home.title",
+            language,
+        )
     )
 
     st.write(
-        """
-        Tìm khách sạn phù hợp với nhu cầu,
-        khám phá gợi ý theo nhóm khách
-        và xem insight từ đánh giá thực tế.
-        """
+        t(
+            "home.intro_1",
+            language,
+        )
     )
 
     st.write(
-        """
-        Ứng dụng hỗ trợ người dùng tìm khách sạn
-        phù hợp và cung cấp insight cho chủ khách sạn.
-        """
+        t(
+            "home.intro_2",
+            language,
+        )
     )
 
     st.markdown(
-        """
-        **Ba nhiệm vụ chính**
-
-        1. Gợi ý khách sạn có nội dung tương tự.
-        2. Gợi ý khách sạn theo phân khúc khách hàng.
-        3. Phân tích review và hiệu quả của từng khách sạn.
-        """
+        (
+            f"**{t('home.tasks_title', language)}**\n\n"
+            f"1. {t('home.task_1', language)}\n"
+            f"2. {t('home.task_2', language)}\n"
+            f"3. {t('home.task_3', language)}"
+        )
     )
 
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
-        "Khách sạn",
+        t(
+            "home.metric_hotels",
+            language,
+        ),
         f"{summary['hotel_info_rows']:,}",
     )
 
     col2.metric(
-        "Review",
+        t(
+            "home.metric_reviews",
+            language,
+        ),
         f"{summary['hotel_comment_rows']:,}",
     )
 
     col3.metric(
-        "Customer groups",
+        t(
+            "home.metric_groups",
+            language,
+        ),
         f"{summary['customer_groups']:,}",
     )
 
     col4.metric(
-        "Customer group – hotel interactions",
+        t(
+            "home.metric_interactions",
+            language,
+        ),
         f"{summary['cf_interactions']:,}",
     )
 
     st.subheader(
-        "Thiết kế hệ thống"
+        t(
+            "home.system_design",
+            language,
+        )
     )
 
     st.code(
-        """
-Notebook:
-Data preparation → Modeling → Evaluation → Export artifacts
-
-Streamlit:
-Load artifacts → User input → Recommendation / Insight
-        """,
+        t(
+            "home.system_flow",
+            language,
+        ),
         language="text",
     )
 
     st.info(
-        "Collaborative recommendation của project "
-        "được thực hiện ở cấp customer group, "
-        "không phải cá nhân hóa theo từng reviewer."
+        t(
+            "home.group_note",
+            language,
+        )
     )
 
 
@@ -229,28 +274,47 @@ Load artifacts → User input → Recommendation / Insight
 
 elif page == "Content-Based Recommendation":
     st.title(
-        "🔎 Tìm khách sạn phù hợp"
+        t(
+            "search.title",
+            language,
+        )
     )
 
     st.write(
-        """
-        Tìm khách sạn theo nhu cầu của bạn
-        hoặc chọn một khách sạn có sẵn để
-        tìm những khách sạn tương tự.
-        """
+        t(
+            "search.intro",
+            language,
+        )
     )
 
     search_mode = st.radio(
-        "Bạn muốn tìm theo cách nào?",
+        t(
+            "search.mode_question",
+            language,
+        ),
         [
-            "Mô tả nhu cầu",
-            "Khách sạn tương tự",
+            "query",
+            "similar",
         ],
+        format_func=(
+            lambda mode:
+            t(
+                (
+                    "search.mode_query"
+                    if mode == "query"
+                    else "search.mode_similar"
+                ),
+                language,
+            )
+        ),
         horizontal=True,
     )
 
     top_n = st.slider(
-        "Số khách sạn đề xuất",
+        t(
+            "search.top_n",
+            language,
+        ),
         min_value=5,
         max_value=20,
         value=10,
@@ -261,18 +325,26 @@ elif page == "Content-Based Recommendation":
     # Search by free-text query
     # --------------------------------------------------------
 
-    if search_mode == "Mô tả nhu cầu":
+    if search_mode == "query":
 
         query = st.text_input(
-            "Bạn đang tìm khách sạn như thế nào?",
+            t(
+                "search.query_label",
+                language,
+            ),
             placeholder=(
-                "Ví dụ: resort 5 sao gần biển "
-                "ở Cam Ranh"
+                t(
+                    "search.query_placeholder",
+                    language,
+                )
             ),
         )
 
         if st.button(
-            "🔍 Tìm khách sạn",
+            t(
+                "search.button",
+                language,
+            ),
             key="query_search_button",
         ):
             try:
@@ -287,18 +359,18 @@ elif page == "Content-Based Recommendation":
                 )
 
                 st.success(
-                    f"Tìm thấy {len(result)} "
-                    "khách sạn phù hợp."
+                    t(
+                        "search.found",
+                        language,
+                        count=len(result),
+                    )
                 )
 
                 st.caption(
-                    "Nếu mô tả có loại hình, hạng sao "
-                    "hoặc khu vực được nhận diện, hệ thống "
-                    "sẽ dùng các điều kiện đó để lọc ứng viên, "
-                    "sau đó xếp hạng bằng TF-IDF + "
-                    "Cosine Similarity. Phần trăm hiển thị "
-                    "là độ tương đồng nội dung, không phải "
-                    "xác suất người dùng sẽ đặt phòng."
+                    t(
+                        "search.ranking_explanation",
+                        language,
+                    )
                 )
 
                 display_hotel_cards(
@@ -306,13 +378,24 @@ elif page == "Content-Based Recommendation":
                     hotel_info=hotel_info,
                     hotel_comments=hotel_comments,
                     mode="content",
-                    score_label=(
-                        "Mức phù hợp"
+                    language=language,
+                    score_label_key=(
+                        "card.match_score"
                     ),
                 )
 
+            except RecommendationError as error:
+                st.error(
+                    t(
+                        error.message_key,
+                        language,
+                    )
+                )
+
             except Exception as error:
-                st.error(str(error))
+                st.exception(
+                    error
+                )
 
     # --------------------------------------------------------
     # Search hotels similar to an existing hotel
@@ -326,7 +409,10 @@ elif page == "Content-Based Recommendation":
         )
 
         selected_label = st.selectbox(
-            "Chọn khách sạn",
+            t(
+                "search.choose_hotel",
+                language,
+            ),
             list(
                 content_options.keys()
             ),
@@ -339,7 +425,10 @@ elif page == "Content-Based Recommendation":
         )
 
         if st.button(
-            "🔍 Tìm khách sạn tương tự",
+            t(
+                "search.similar_button",
+                language,
+            ),
             key="similar_search_button",
         ):
             try:
@@ -353,15 +442,18 @@ elif page == "Content-Based Recommendation":
                 )
 
                 st.success(
-                    f"Tìm thấy {len(result)} "
-                    "khách sạn tương tự."
+                    t(
+                        "search.similar_found",
+                        language,
+                        count=len(result),
+                    )
                 )
 
                 st.caption(
-                    "Mức tương đồng được tính từ "
-                    "Cosine Similarity × 100. "
-                    "Đây là độ giống nhau về nội dung "
-                    "giữa hai khách sạn."
+                    t(
+                        "search.similarity_explanation",
+                        language,
+                    )
                 )
 
                 display_hotel_cards(
@@ -369,11 +461,24 @@ elif page == "Content-Based Recommendation":
                     hotel_info=hotel_info,
                     hotel_comments=hotel_comments,
                     mode="content",
-                    score_label="Mức tương đồng",
+                    language=language,
+                    score_label_key=(
+                        "card.similarity_score"
+                    ),
+                )
+
+            except RecommendationError as error:
+                st.error(
+                    t(
+                        error.message_key,
+                        language,
+                    )
                 )
 
             except Exception as error:
-                st.error(str(error))
+                st.exception(
+                    error
+                )
 
 
 # ============================================================
@@ -382,13 +487,17 @@ elif page == "Content-Based Recommendation":
 
 elif page == "Customer-Group Recommendation":
     st.title(
-        "👥 Customer-Group Recommendation"
+        t(
+            "group.title",
+            language,
+        )
     )
 
     st.warning(
-        "Do mỗi Reviewer ID chỉ có một interaction, "
-        "đây là recommendation theo phân khúc, "
-        "không phải cá nhân hóa cho từng người."
+        t(
+            "group.warning",
+            language,
+        )
     )
 
     group_lookup = (
@@ -420,7 +529,10 @@ elif page == "Customer-Group Recommendation":
     )
 
     nationality = st.selectbox(
-        "Quốc tịch",
+        t(
+            "group.nationality",
+            language,
+        ),
         sorted(
             group_lookup[
                 "nationality"
@@ -438,7 +550,10 @@ elif page == "Customer-Group Recommendation":
     )
 
     group_name = st.selectbox(
-        "Nhóm khách",
+        t(
+            "group.group_name",
+            language,
+        ),
         valid_group_names,
     )
 
@@ -457,7 +572,10 @@ elif page == "Customer-Group Recommendation":
     )
 
     top_n = st.slider(
-        "Số khách sạn đề xuất",
+        t(
+            "group.top_n",
+            language,
+        ),
         min_value=5,
         max_value=20,
         value=10,
@@ -465,7 +583,10 @@ elif page == "Customer-Group Recommendation":
     )
 
     if st.button(
-        "Tạo recommendation",
+        t(
+            "group.button",
+            language,
+        ),
         key="ridge_button",
     ):
         try:
@@ -478,16 +599,19 @@ elif page == "Customer-Group Recommendation":
             )
 
             st.success(
-                f"Tìm thấy {len(result)} "
-                "khách sạn phù hợp với nhóm: "
-                f"{customer_group}"
+                t(
+                    "group.found",
+                    language,
+                    count=len(result),
+                    group=customer_group,
+                )
             )
 
             st.caption(
-                "Điểm dự đoán là rating mà mô hình "
-                "ước lượng cho từng khách sạn đối với "
-                "nhóm khách đã chọn. "
-                "Đây không phải xác suất đặt phòng."
+                t(
+                    "group.explanation",
+                    language,
+                )
             )
 
             display_hotel_cards(
@@ -495,10 +619,21 @@ elif page == "Customer-Group Recommendation":
                 hotel_info=hotel_info,
                 hotel_comments=hotel_comments,
                 mode="customer_group",
+                language=language,
+            )
+
+        except RecommendationError as error:
+            st.error(
+                t(
+                    error.message_key,
+                    language,
+                )
             )
 
         except Exception as error:
-            st.exception(error)
+            st.exception(
+                error
+            )
 
 
 # ============================================================
@@ -507,7 +642,10 @@ elif page == "Customer-Group Recommendation":
 
 elif page == "Hotel Insights":
     st.title(
-        "📊 Hotel Insights"
+        t(
+            "insights.title",
+            language,
+        )
     )
 
     reviewed_ids = set(
@@ -527,8 +665,13 @@ elif page == "Hotel Insights":
     )
 
     selected_label = st.selectbox(
-        "Chọn khách sạn cần phân tích",
-        list(insight_options.keys()),
+        t(
+            "insights.choose_hotel",
+            language,
+        ),
+        list(
+            insight_options.keys()
+        ),
     )
 
     hotel_id = insight_options[
@@ -549,33 +692,60 @@ elif page == "Hotel Insights":
         col1, col2, col3 = st.columns(3)
 
         col1.metric(
-            "Số review",
+            t(
+                "insights.review_count",
+                language,
+            ),
             f"{len(reviews):,}",
         )
 
         col2.metric(
-            "Điểm trung bình",
+            t(
+                "insights.average_score",
+                language,
+            ),
             f"{reviews['score'].mean():.2f}",
         )
 
         col3.metric(
-            "Hạng sao",
+            t(
+                "insights.star_rating",
+                language,
+            ),
             (
                 f"{hotel['hotel_rank']}"
                 if pd.notna(
                     hotel["hotel_rank"]
                 )
-                else "Không có dữ liệu"
+                else t(
+                    "common.no_data",
+                    language,
+                )
             ),
         )
 
         tab1, tab2, tab3, tab4, tab5 = st.tabs(
             [
-                "Tổng quan",
-                "Điểm mạnh",
-                "Khách hàng",
-                "Xu hướng",
-                "Review & từ khóa",
+                t(
+                    "insights.tab_overview",
+                    language,
+                ),
+                t(
+                    "insights.tab_strengths",
+                    language,
+                ),
+                t(
+                    "insights.tab_customers",
+                    language,
+                ),
+                t(
+                    "insights.tab_trends",
+                    language,
+                ),
+                t(
+                    "insights.tab_keywords",
+                    language,
+                ),
             ]
         )
 
@@ -586,7 +756,11 @@ elif page == "Hotel Insights":
             )
 
             st.dataframe(
-                overview,
+                localize_dataframe(
+                    overview,
+                    language,
+                    translate_values=True,
+                ),
                 use_container_width=True,
                 hide_index=True,
             )
@@ -598,11 +772,17 @@ elif page == "Hotel Insights":
             )
 
             st.subheader(
-                "Phân bố mức đánh giá"
+                t(
+                    "insights.score_distribution",
+                    language,
+                )
             )
 
             st.dataframe(
-                score_levels,
+                localize_dataframe(
+                    score_levels,
+                    language,
+                ),
                 use_container_width=True,
                 hide_index=True,
             )
@@ -621,7 +801,11 @@ elif page == "Hotel Insights":
             )
 
             st.dataframe(
-                benchmark.round(2),
+                localize_dataframe(
+                    benchmark.round(2),
+                    language,
+                    translate_values=True,
+                ),
                 use_container_width=True,
                 hide_index=True,
             )
@@ -665,9 +849,23 @@ elif page == "Hotel Insights":
                 lowest = valid_benchmark.iloc[-1]
 
                 st.success(
-                    "Tiêu chí nổi bật nhất: "
-                    f"{best['Tiêu chí']} "
-                    f"({best['Chênh lệch với hệ thống']:+.2f})"
+                    t(
+                        "insights.best_criterion",
+                        language,
+                        criterion=(
+                            localize_value(
+                                best[
+                                    "Tiêu chí"
+                                ],
+                                language,
+                            )
+                        ),
+                        value=(
+                            best[
+                                "Chênh lệch với hệ thống"
+                            ]
+                        ),
+                    )
                 )
 
                 if (
@@ -677,14 +875,30 @@ elif page == "Hotel Insights":
                     < 0
                 ):
                     st.warning(
-                        "Tiêu chí cần ưu tiên: "
-                        f"{lowest['Tiêu chí']} "
-                        f"({lowest['Chênh lệch với hệ thống']:+.2f})"
+                        t(
+                            "insights.priority_criterion",
+                            language,
+                            criterion=(
+                                localize_value(
+                                    lowest[
+                                        "Tiêu chí"
+                                    ],
+                                    language,
+                                )
+                            ),
+                            value=(
+                                lowest[
+                                    "Chênh lệch với hệ thống"
+                                ]
+                            ),
+                        )
                     )
                 else:
                     st.info(
-                        "Không có tiêu chí có dữ liệu "
-                        "thấp hơn trung bình hệ thống."
+                        t(
+                            "insights.no_below_average",
+                            language,
+                        )
                     )
 
         with tab3:
@@ -714,20 +928,28 @@ elif page == "Hotel Insights":
 
             if len(reviews) < 20:
                 st.warning(
-                    f"Khách sạn này chỉ có {len(reviews)} review. "
-                    "Thống kê quốc tịch và nhóm khách chỉ mang tính mô tả, "
-                    "chưa đủ dữ liệu để kết luận xu hướng."
+                    t(
+                        "insights.low_data_warning",
+                        language,
+                        count=len(reviews)
+                    )
                 )
 
             left, right = st.columns(2)
 
             with left:
                 st.subheader(
-                    "Quốc tịch"
+                    t(
+                        "insights.nationality",
+                        language,
+                    )
                 )
 
                 st.dataframe(
-                    nationality_summary,
+                    localize_dataframe(
+                        nationality_summary,
+                        language,
+                    ),
                     use_container_width=True,
                     hide_index=True,
                 )
@@ -741,11 +963,17 @@ elif page == "Hotel Insights":
 
             with right:
                 st.subheader(
-                    "Nhóm khách"
+                    t(
+                        "insights.group",
+                        language,
+                    )
                 )
 
                 st.dataframe(
-                    group_summary,
+                    localize_dataframe(
+                        group_summary,
+                        language,
+                    ),
                     use_container_width=True,
                     hide_index=True,
                 )
@@ -765,14 +993,20 @@ elif page == "Hotel Insights":
             )
 
             st.dataframe(
-                yearly_summary,
+                localize_dataframe(
+                    yearly_summary,
+                    language,
+                ),
                 use_container_width=True,
                 hide_index=True,
             )
 
             if not yearly_summary.empty:
                 st.subheader(
-                    "Số review theo năm"
+                    t(
+                        "insights.reviews_by_year",
+                        language,
+                    )
                 )
 
                 st.bar_chart(
@@ -782,7 +1016,10 @@ elif page == "Hotel Insights":
                 )
 
                 st.subheader(
-                    "Điểm trung bình theo năm"
+                    t(
+                        "insights.score_by_year",
+                        language,
+                    )
                 )
 
                 st.line_chart(
@@ -807,7 +1044,10 @@ elif page == "Hotel Insights":
 
             with left:
                 st.subheader(
-                    "Review điểm từ 9 trở lên"
+                    t(
+                        "insights.high_reviews",
+                        language,
+                    )
                 )
 
                 st.metric(
@@ -819,11 +1059,17 @@ elif page == "Hotel Insights":
 
                 if positive_keywords.empty:
                     st.info(
-                        "Chưa đủ từ khóa."
+                        t(
+                            "insights.no_keywords",
+                            language,
+                        )
                     )
                 else:
                     st.dataframe(
-                        positive_keywords,
+                        localize_dataframe(
+                            positive_keywords,
+                            language,
+                        ),
                         use_container_width=True,
                         hide_index=True,
                     )
@@ -836,7 +1082,10 @@ elif page == "Hotel Insights":
 
             with right:
                 st.subheader(
-                    "Review điểm dưới 9"
+                    t(
+                        "insights.low_reviews",
+                        language,
+                    )
                 )
 
                 st.metric(
@@ -848,11 +1097,17 @@ elif page == "Hotel Insights":
 
                 if improvement_keywords.empty:
                     st.info(
-                        "Chưa đủ từ khóa."
+                        t(
+                             "insights.no_keywords",
+                             language,
+                        )
                     )
                 else:
                     st.dataframe(
-                        improvement_keywords,
+                        localize_dataframe(
+                            improvement_keywords,
+                            language,
+                        ),
                         use_container_width=True,
                         hide_index=True,
                     )
@@ -864,13 +1119,17 @@ elif page == "Hotel Insights":
                     )
 
             st.caption(
-                "Từ khóa chỉ giúp xác định chủ đề "
-                "cần đọc sâu hơn; không tự động kết luận "
-                "đó là điểm mạnh hay điểm yếu."
+                t(
+                    "insights.keyword_note",
+                    language,
+                )
             )
 
             st.subheader(
-                "Các review có điểm thấp nhất"
+               t(
+                    "insights.lowest_reviews",
+                    language,
+               )
             )
 
             lowest_reviews = get_lowest_reviews(
@@ -879,13 +1138,26 @@ elif page == "Hotel Insights":
             )
 
             st.dataframe(
-                lowest_reviews,
+                localize_dataframe(
+                    lowest_reviews,
+                    language,
+                ),
                 use_container_width=True,
                 hide_index=True,
             )
 
+    except RecommendationError as error:
+        st.error(
+            t(
+                error.message_key,
+                language,
+            )
+        )
+
     except Exception as error:
-        st.exception(error)
+        st.exception(
+            error
+        )
 
 
 # ============================================================
@@ -894,35 +1166,48 @@ elif page == "Hotel Insights":
 
 elif page == "Evaluation & Report":
     st.title(
-        "📈 Evaluation & Report"
+        t(
+            "evaluation.title",
+            language,
+        )
     )
 
     st.subheader(
-        "Content-Based Filtering"
+        t(
+            "evaluation.content_based",
+            language,
+        )
     )
 
     st.metric(
-        "Top-10 overlap: Cosine và Gensim",
+        t(
+            "evaluation.overlap",
+            language,
+        ),
         (
             f"{summary['content_top10_overlap']}/10"
         ),
     )
 
     st.write(
-        """
-        Hai phương pháp có mức nhất quán tương đối,
-        nhưng similarity score không phải xác suất
-        người dùng sẽ đặt khách sạn.
-        """
+        t(
+            "evaluation.content_note",
+            language,
+        )
     )
 
     st.info(
-        "Chưa thể tính Precision@K hoặc Recall@K "
-        "do dữ liệu không có ground truth recommendation."
+        t(
+            "evaluation.no_ground_truth",
+            language,
+        )
     )
 
     st.subheader(
-        "Collaborative Filtering"
+        t(
+            "evaluation.collaborative",
+            language,
+        )
     )
 
     sorted_comparison = (
@@ -932,7 +1217,10 @@ elif page == "Evaluation & Report":
     )
 
     st.dataframe(
-        sorted_comparison.round(4),
+        localize_dataframe(
+            sorted_comparison.round(4),
+            language,
+        ),
         use_container_width=True,
         hide_index=True,
     )
@@ -951,53 +1239,40 @@ elif page == "Evaluation & Report":
     st.bar_chart(metric_chart)
 
     st.success(
-        "One-Hot + Ridge được dùng trong GUI "
-        "vì có RMSE và MAE thấp nhất trên tập test."
+        t(
+            "evaluation.ridge_selected",
+            language,
+        )
     )
 
     st.write(
-        """
-        PySpark ALS vẫn được xây dựng và đánh giá
-        trong notebook để đáp ứng yêu cầu Big Data
-        in Machine Learning, nhưng không chạy trực tiếp
-        trong Streamlit.
-        """
+        t(
+            "evaluation.als_note",
+            language,
+        )
     )
 
     st.subheader(
-        "Limitations"
+        t(
+            "evaluation.limitations",
+            language,
+        )
     )
 
-    for limitation in summary["limitations"]:
-        st.markdown(f"- {limitation}")
+    LIMITATION_KEYS = [
+        "limitation.single_interaction",
+        "limitation.group_level",
+        "limitation.hotel_id",
+        "limitation.no_ground_truth",
+    ]
 
-
-# ============================================================
-# Page 6: Team
-# ============================================================
-
-elif page == "Team Information":
-    st.title(
-        "👨‍💻 Team Information"
-    )
-
-    st.subheader(
-        "Nhóm 2"
-    )
-
-    st.write(
-        """
-        - Nguyễn Minh Khoa
-        - Nguyễn Hoàng Quỳnh Anh
-        """
-    )
-
-    st.subheader(
-        "Project Link"
-    )
-
-    st.write(
-        """
-        - Streamlit: https://hotel-recommendation-insights.streamlit.app/
-        """
-    )
+    for limitation_key in (
+        LIMITATION_KEYS
+    ):
+        st.markdown(
+            "- "
+            + t(
+                limitation_key,
+                language,
+            )
+        )

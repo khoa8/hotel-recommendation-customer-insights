@@ -5,6 +5,9 @@ from pathlib import Path
 
 import streamlit as st
 
+from src.i18n import (
+    t,
+)
 
 PROJECT_ROOT = (
     Path(__file__)
@@ -94,7 +97,7 @@ def load_app_styles():
     )
 
 
-def display_global_banner():
+def display_global_banner(language:str,):
     """Display the global hotel discovery hero."""
 
     image_uri = (
@@ -119,7 +122,7 @@ def display_global_banner():
         '<div class="hotel-hero" '
         f'style="{inline_style}">'
         '  <div class="hotel-hero-title">'
-        '    Tìm nơi ở phù hợp cho chuyến đi của bạn'
+        f'    {t("hero.title", language)}'
         '  </div>'
         '</div>'
     )

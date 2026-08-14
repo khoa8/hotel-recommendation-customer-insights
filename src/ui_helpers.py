@@ -12,7 +12,7 @@ import pandas as pd
 # Thứ tự quan trọng: apartment phải đứng trước resort.
 PROPERTY_RULES = [
     (
-        "🏠 Căn hộ",
+        "highlight.apartment",
         (
             "can ho",
             "apartment",
@@ -21,27 +21,27 @@ PROPERTY_RULES = [
         ),
     ),
     (
-        "🏡 Villa",
+        "highlight.villa",
         (
             "biet thu",
             "villa",
         ),
     ),
     (
-        "🛏️ Homestay",
+        "highlight.homestay",
         (
             "homestay",
         ),
     ),
     (
-        "🏘️ Nhà riêng",
+        "highlight.house",
         (
             "nha rieng",
             "house",
         ),
     ),
     (
-        "🌴 Resort",
+        "highlight.resort",
         (
             "resort",
             "khu nghi duong",
@@ -84,7 +84,7 @@ AIRPORT_TRANSFER_TERMS = (
 
 AMENITY_RULES = [
     (
-        "🏊 Hồ bơi",
+        "highlight.pool",
         (
             "khach san co ho boi",
             "khach san co be boi",
@@ -96,7 +96,7 @@ AMENITY_RULES = [
         ),
     ),
     (
-        "💆 Spa",
+        "highlight.spa",
         (
             "spa cua khach san",
             "khach san co spa",
@@ -106,7 +106,7 @@ AMENITY_RULES = [
         ),
     ),
     (
-        "🏋️ Phòng gym",
+        "highlight.gym",
         (
             "phong tap the duc",
             "trung tam the duc",
@@ -116,7 +116,7 @@ AMENITY_RULES = [
         ),
     ),
     (
-        "🍽️ Nhà hàng",
+        "highlight.restaurant",
         (
             "khach san co nha hang",
             "khach san co mot nha hang",
@@ -272,7 +272,7 @@ def extract_hotel_highlights(
         BEACH_TERMS,
     ):
         highlights.append(
-            "🏖️ Gần biển"
+            "highlight.near_beach"
         )
 
     # --------------------------------------------------------
@@ -284,7 +284,7 @@ def extract_hotel_highlights(
         NEAR_AIRPORT_TERMS,
     ):
         highlights.append(
-            "✈️ Gần sân bay"
+            "highlight.near_airport"
         )
 
     elif _contains_any(
@@ -292,7 +292,7 @@ def extract_hotel_highlights(
         AIRPORT_TRANSFER_TERMS,
     ):
         highlights.append(
-            "✈️ Đưa đón sân bay"
+            "highlight.airport_transfer"
         )
 
     # --------------------------------------------------------
@@ -317,7 +317,7 @@ def extract_hotel_highlights(
         FAMILY_TERMS,
     ):
         highlights.append(
-            "👨‍👩‍👧 Phù hợp gia đình"
+            "highlight.family"
         )
 
     # --------------------------------------------------------
@@ -331,7 +331,7 @@ def extract_hotel_highlights(
         LUXURY_NAME_TERMS,
     ):
         highlights.append(
-            "✨ Cao cấp"
+            "highlight.luxury"
         )
 
     return highlights[:max_tags]
