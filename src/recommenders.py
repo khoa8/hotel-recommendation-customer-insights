@@ -8,6 +8,22 @@ from sklearn.metrics.pairwise import (
     cosine_similarity,
 )
 
+class RecommendationError(
+    ValueError
+):
+    """User-facing recommendation error with an i18n key."""
+
+    def __init__(
+        self,
+        message_key: str,
+    ):
+        self.message_key = (
+            message_key
+        )
+
+        super().__init__(
+            message_key
+        )
 
 HOTEL_DISPLAY_COLUMNS = [
     "hotel_id",
@@ -451,8 +467,8 @@ def recommend_by_cosine(
     ]
 
     if selected.empty:
-        raise ValueError(
-            "Không tìm thấy khách sạn."
+        raise RecommendationError(
+            "error.hotel_not_found"
         )
 
     source_row = int(
@@ -511,8 +527,8 @@ def recommend_by_query(
     query = query.strip()
 
     if not query:
-        raise ValueError(
-            "Vui lòng nhập nhu cầu tìm khách sạn."
+        raise RecommendationError(
+            "error.query_required"
         )
 
     expanded_query = (
@@ -528,10 +544,8 @@ def recommend_by_query(
     )
 
     if query_vector.nnz == 0:
-        raise ValueError(
-            "Không tìm thấy từ khóa phù hợp "
-            "trong dữ liệu khách sạn. "
-            "Hãy thử mô tả khác."
+        raise RecommendationError(
+            "error.no_matching_keywords"
         )
 
     scores = cosine_similarity(
@@ -547,10 +561,8 @@ def recommend_by_query(
     )
 
     if len(candidate_rows) == 0:
-        raise ValueError(
-            "Không có khách sạn thỏa đồng thời "
-            "các điều kiện đã nhập. "
-            "Hãy thử bớt một điều kiện."
+        raise RecommendationError(
+            "error.no_candidates"
         )
 
     ranked_rows = candidate_rows[
@@ -568,9 +580,8 @@ def recommend_by_query(
     ][:top_n]
 
     if not ranked_rows:
-        raise ValueError(
-            "Không tìm thấy khách sạn có "
-            "nội dung phù hợp với mô tả."
+        raise RecommendationError(
+            "error.no_content_match"
         )
 
     catalog_by_row = (
@@ -628,9 +639,8 @@ def recommend_by_gensim(
     )
 
     if recommendations.empty:
-        raise ValueError(
-            "Không có Gensim recommendation "
-            "cho khách sạn này."
+        raise RecommendationError(
+            "error.no_gensim_recommendation"
         )
 
     recommendations = recommendations.merge(
@@ -667,8 +677,8 @@ def recommend_with_ridge(
     )
 
     if customer_group not in valid_groups:
-        raise ValueError(
-            "Không tìm thấy customer group."
+        raise RecommendationError(
+            "error.customer_group_not_found"
         )
 
     seen_hotels = set(
