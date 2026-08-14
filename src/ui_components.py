@@ -13,6 +13,10 @@ from src.ui_helpers import (
     extract_hotel_highlights,
 )
 
+from src.image_helpers import (
+    get_hotel_image,
+)
+
 
 def _format_score(
     value,
@@ -221,174 +225,211 @@ def display_hotel_cards(
             border=False,
             key=card_key,
         ):
-            main_col, score_col = (
+            hotel_name = str(
+                hotel[
+                    "hotel_name"
+                ]
+            )
+
+            image_path, is_exact_image = (
+                get_hotel_image(
+                    hotel_id=hotel_id,
+                    hotel_name=hotel_name,
+                )
+            )
+
+            image_col, main_col, score_col = (
                 st.columns(
-                    [4, 1.2]
+                    [1, 4, 1],
+                    gap="medium",
                 )
             )
 
             # ================================================
-            # Main hotel information
+            # Hotel image
             # ================================================
+
+            with image_col:
+                image_key = (
+                    f"hotel-image-"
+                    f"{safe_hotel_id}"
+                )
+
+                with st.container(
+                    border=False,
+                    key=image_key,
+                ):
+                    if image_path is not None:
+                        st.image(
+                            image_path,
+                            width=260,
+                        )
+
+                        if not is_exact_image:
+                            st.caption("Ảnh minh họa")
 
             with main_col:
 
-                hotel_name = str(
-                    hotel[
-                        "hotel_name"
-                    ]
+                main_key = (
+                    f"hotel-main-"
+                    f"{safe_hotel_id}"
                 )
 
-                if rank is not None:
-                    st.markdown(
-                        f"### #{int(rank)} · "
-                        f"{hotel_name}"
-                    )
-                else:
-                    st.markdown(
-                        f"### {hotel_name}"
-                    )
+                with st.container(
+                    border=False,
+                    key=main_key,
+                ):
 
-                metadata_badges = []
-
-                hotel_rank = hotel.get(
-                    "hotel_rank"
-                )
-
-                if pd.notna(hotel_rank):
-                    metadata_badges.append(
-                        (
-                            "star",
-                            "⭐",
-                            (
-                                f"{float(hotel_rank):g} sao"
-                            ),
+                    if rank is not None:
+                        st.markdown(
+                            f"### #{int(rank)} · "
+                            f"{hotel_name}"
                         )
-                    )
-
-                total_score = hotel.get(
-                    "total_score"
-                )
-
-                if pd.notna(total_score):
-                    metadata_badges.append(
-                        (
-                            "score",
-                            "🏅",
-                            (
-                                f"{float(total_score):.1f}/10"
-                            ),
+                    else:
+                        st.markdown(
+                            f"### {hotel_name}"
                         )
+
+                    metadata_badges = []
+
+                    hotel_rank = hotel.get(
+                        "hotel_rank"
                     )
 
-                comments_count = hotel.get(
-                    "comments_count"
-                )
-
-                if pd.notna(comments_count):
-                    metadata_badges.append(
-                        (
-                            "reviews",
-                            "💬",
+                    if pd.notna(hotel_rank):
+                        metadata_badges.append(
                             (
-                                f"{int(comments_count):,} "
-                                "reviews"
-                            ),
-                        )
-                    )
-
-                badge_html = "".join(
-                    (
-                        '<span class="hotel-meta-badge '
-                        f'{css_class}">'
-                        f'{icon} {text}'
-                        '</span>'
-                    )
-                    for (
-                        css_class,
-                        icon,
-                        text,
-                    )
-                    in metadata_badges
-                )
-
-                if badge_html:
-                    st.markdown(
-                        (
-                            '<div class="hotel-meta-row">'
-                            f'{badge_html}'
-                            '</div>'
-                        ),
-                        unsafe_allow_html=True,
-                    )
-
-                highlights = (
-                    extract_hotel_highlights(
-                        hotel_name=hotel_name,
-                        hotel_description=(
-                            hotel.get(
-                                "hotel_description"
+                                "star",
+                                "⭐",
+                                (
+                                    f"{float(hotel_rank):g} sao"
+                                ),
                             )
-                        ),
-                        hotel_address=(
-                            hotel.get(
-                                "hotel_address"
-                            )
-                        ),
-                        max_tags=5,
-                    )
-                )
+                        )
 
-                if highlights:
-                    highlight_html = "".join(
+                    total_score = hotel.get(
+                        "total_score"
+                    )
+
+                    if pd.notna(total_score):
+                        metadata_badges.append(
+                            (
+                                "score",
+                                "🏅",
+                                (
+                                    f"{float(total_score):.1f}/10"
+                                ),
+                            )
+                        )
+
+                    comments_count = hotel.get(
+                        "comments_count"
+                    )
+
+                    if pd.notna(comments_count):
+                        metadata_badges.append(
+                            (
+                                "reviews",
+                                "💬",
+                                (
+                                    f"{int(comments_count):,} "
+                                    "reviews"
+                                ),
+                            )
+                        )
+
+                    badge_html = "".join(
                         (
-                            '<span class="'
-                            'hotel-highlight-tag">'
-                            f'{highlight}'
+                            '<span class="hotel-meta-badge '
+                            f'{css_class}">'
+                            f'{icon} {text}'
                             '</span>'
                         )
-                        for highlight
-                        in highlights
+                        for (
+                            css_class,
+                            icon,
+                            text,
+                        )
+                        in metadata_badges
                     )
 
-                    st.markdown(
-                        (
-                            '<div class="'
-                            'hotel-highlight-row">'
-                            f'{highlight_html}'
-                            '</div>'
-                        ),
-                        unsafe_allow_html=True,
-                    )
-
-                address = hotel.get(
-                    "hotel_address"
-                )
-
-                if pd.notna(address):
-                    address = str(
-                        address
-                    ).strip()
-
-                    maps_url = (
-                        _build_maps_url(
-                            hotel_name=(
-                                hotel_name
+                    if badge_html:
+                        st.markdown(
+                            (
+                                '<div class="hotel-meta-row">'
+                                f'{badge_html}'
+                                '</div>'
                             ),
-                            address=address,
+                            unsafe_allow_html=True,
+                        )
+
+                    highlights = (
+                        extract_hotel_highlights(
+                            hotel_name=hotel_name,
+                            hotel_description=(
+                                hotel.get(
+                                    "hotel_description"
+                                )
+                            ),
+                            hotel_address=(
+                                hotel.get(
+                                    "hotel_address"
+                                )
+                            ),
+                            max_tags=5,
                         )
                     )
 
-                    st.link_button(
-                        f"📍 {address}",
-                        maps_url,
-                        use_container_width=True,
+                    if highlights:
+                        highlight_html = "".join(
+                            (
+                                '<span class="'
+                                'hotel-highlight-tag">'
+                                f'{highlight}'
+                                '</span>'
+                            )
+                            for highlight
+                            in highlights
+                        )
+
+                        st.markdown(
+                            (
+                                '<div class="'
+                                'hotel-highlight-row">'
+                                f'{highlight_html}'
+                                '</div>'
+                            ),
+                            unsafe_allow_html=True,
+                        )
+
+                    address = hotel.get(
+                        "hotel_address"
                     )
 
-                else:
-                    st.caption(
-                        "📍 Chưa có dữ liệu địa chỉ."
-                    )
+                    if pd.notna(address):
+                        address = str(
+                            address
+                        ).strip()
+
+                        maps_url = (
+                            _build_maps_url(
+                                hotel_name=(
+                                    hotel_name
+                                ),
+                                address=address,
+                            )
+                        )
+
+                        st.link_button(
+                            f"📍 {address}",
+                            maps_url,
+                            use_container_width=True,
+                        )
+
+                    else:
+                        st.caption(
+                            "📍 Chưa có dữ liệu địa chỉ."
+                        )
 
             # ================================================
             # Recommendation score
